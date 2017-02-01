@@ -1,8 +1,10 @@
 package com.rt2zz.reactnativecontacts;
 
+import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -48,7 +50,9 @@ public class ContactsProvider {
         add(Contactables.PHOTO_URI);
         add(Contactables.PHOTO_THUMBNAIL_URI);
         add(Contactables.LOOKUP_KEY);
-        // add(Contactables.CONTACT_LAST_UPDATED_TIMESTAMP);
+        if (Build.VERSION.SDK_INT >= 18) {
+            add(Contactables.CONTACT_LAST_UPDATED_TIMESTAMP);
+        }
         add(StructuredName.DISPLAY_NAME);
         add(StructuredName.GIVEN_NAME);
         add(StructuredName.FAMILY_NAME);
@@ -58,8 +62,10 @@ public class ContactsProvider {
         add(StructuredName.PHONETIC_GIVEN_NAME);
         add(StructuredName.PHONETIC_MIDDLE_NAME);
         add(StructuredName.PHONETIC_FAMILY_NAME);
-        // add(StructuredName.FULL_NAME_STYLE);
-        add(StructuredName.PHONETIC_NAME_STYLE);
+        // if (Build.VERSION.SDK_INT >= 21) {
+        //     add(StructuredName.FULL_NAME_STYLE);
+        // }
+        // add(StructuredName.PHONETIC_NAME_STYLE);
         add(Nickname.TYPE);
         add(Nickname.LABEL);
         add(Nickname.NAME);
@@ -94,7 +100,7 @@ public class ContactsProvider {
         add(Organization.SYMBOL);
         add(Organization.PHONETIC_NAME);
         add(Organization.OFFICE_LOCATION);
-        add(Organization.PHONETIC_NAME_STYLE);
+        // add(Organization.PHONETIC_NAME_STYLE);
         add(Relation.TYPE);
         add(Relation.LABEL);
         add(Relation.NAME);
@@ -239,12 +245,15 @@ public class ContactsProvider {
                 map.put(id, contact);
 
                 contact.timesContacted = getInt(cursor, ContactsContract.Data.TIMES_CONTACTED);
-                contact.lastTimeContacted = getInt(cursor, ContactsContract.Data.LAST_TIME_CONTACTED);
+                contact.lastTimeContacted = getString(cursor, ContactsContract.Data.LAST_TIME_CONTACTED);
                 contact.starred = getInt(cursor, ContactsContract.Data.STARRED) == 1;
 
                 contact.photoUri = getString(cursor, Contactables.PHOTO_URI);
                 contact.photoThumbnailUri = getString(cursor, Contactables.PHOTO_THUMBNAIL_URI);
                 contact.lookupKey = getString(cursor, Contactables.LOOKUP_KEY);
+                if (Build.VERSION.SDK_INT >= 18) {
+                    contact.contactLastUpdatedTimestamp = getString(cursor, Contactables.CONTACT_LAST_UPDATED_TIMESTAMP);
+                }
             }
 
             switch (getString(cursor, ContactsContract.Data.MIMETYPE)) {
@@ -361,12 +370,13 @@ public class ContactsProvider {
         private String id;
 
         private int timesContacted = 0;
-        private int lastTimeContacted = 0;
+        private String lastTimeContacted;
         private boolean starred = false;
 
         private String photoUri;
         private String photoThumbnailUri;
         private String lookupKey;
+        private String contactLastUpdatedTimestamp;
 
         private List<StructuredNameItem> names = new ArrayList<>();
 
@@ -419,12 +429,13 @@ public class ContactsProvider {
             contact.putString("id", id);
 
             contact.putInt("timesContacted", timesContacted);
-            contact.putInt("lastTimeContacted", lastTimeContacted);
+            putString(contact, "lastTimeContacted", lastTimeContacted);
             contact.putBoolean("starred", starred);
 
             putString(contact, "photoUri", photoUri);
             putString(contact, "photoThumbnailUri", photoThumbnailUri);
             putString(contact, "lookupKey", lookupKey);
+            putString(contact, "contactLastUpdatedTimestamp", contactLastUpdatedTimestamp);
 
             putInfoArray(contact, "names", names);
 
@@ -470,6 +481,7 @@ public class ContactsProvider {
             private String phoneticGivenName;
             private String phoneticMiddleName;
             private String phoneticFamilyName;
+            private String fullNameStyle;
             private String phoneticNameStyle;
 
             public StructuredNameItem(Cursor cursor) {
@@ -482,7 +494,10 @@ public class ContactsProvider {
                 phoneticGivenName = getString(cursor, StructuredName.PHONETIC_GIVEN_NAME);
                 phoneticMiddleName = getString(cursor, StructuredName.PHONETIC_MIDDLE_NAME);
                 phoneticFamilyName = getString(cursor, StructuredName.PHONETIC_FAMILY_NAME);
-                phoneticNameStyle = getPhoneticNameStyle(cursor);
+                // if (Build.VERSION.SDK_INT >= 21) {
+                //     fullNameStyle = getFullNameStyle(cursor);
+                // }
+                // phoneticNameStyle = getPhoneticNameStyle(cursor);
             }
 
             private static String getPhoneticNameStyle(Cursor cursor) {
@@ -500,6 +515,30 @@ public class ContactsProvider {
                 }
             }
 
+
+            @TargetApi(21)
+            private static String getFullNameStyle(Cursor cursor) {
+                if (Build.VERSION.SDK_INT >= 21) {
+                    switch (getInt(cursor, StructuredName.FULL_NAME_STYLE)) {
+                        case ContactsContract.FullNameStyle.UNDEFINED:
+                            return "Undefined";
+                        case ContactsContract.FullNameStyle.WESTERN:
+                            return "Western";
+                        case ContactsContract.FullNameStyle.CJK:
+                            return "CJK";
+                        case ContactsContract.FullNameStyle.CHINESE:
+                            return "Chinese";
+                        case ContactsContract.FullNameStyle.JAPANESE:
+                            return "Japanese";
+                        case ContactsContract.FullNameStyle.KOREAN:
+                            return "Korean";
+                        default:
+                            return null;
+                    }
+                }
+                return null;
+            }
+
             public boolean isValid() {
                 return true;
             }
@@ -515,6 +554,7 @@ public class ContactsProvider {
                 putString(map, "phoneticGivenName", phoneticGivenName);
                 putString(map, "phoneticMiddleName", phoneticMiddleName);
                 putString(map, "phoneticFamilyName", phoneticFamilyName);
+                putString(map, "fullNameStyle", fullNameStyle);
                 putString(map, "phoneticNameStyle", phoneticNameStyle);
                 return map;
             }
@@ -817,7 +857,7 @@ public class ContactsProvider {
                 symbol = getString(cursor, Organization.SYMBOL);
                 phoneticName = getString(cursor, Organization.PHONETIC_NAME);
                 officeLocation = getString(cursor, Organization.OFFICE_LOCATION);
-                phoneticNameStyle = getPhoneticNameStyle(cursor);
+                // phoneticNameStyle = getPhoneticNameStyle(cursor);
             }
 
             private static String getLabel(Cursor cursor) {
