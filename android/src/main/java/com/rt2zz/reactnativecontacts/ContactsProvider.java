@@ -275,7 +275,7 @@ public class ContactsProvider {
                 case StructuredPostal.CONTENT_ITEM_TYPE:
                     Contact.StructuredPostalItem postalItem = new Contact.StructuredPostalItem(cursor);
                     if (postalItem.isValid()) {
-                        contact.postalAddresses.add(postalItem);
+                        contact.postals.add(postalItem);
                     }
                     break;
                 case Im.CONTENT_ITEM_TYPE:
@@ -376,7 +376,7 @@ public class ContactsProvider {
 
         private List<EmailItem> emails = new ArrayList<>();
 
-        private List<StructuredPostalItem> postalAddresses = new ArrayList<>();
+        private List<StructuredPostalItem> postals = new ArrayList<>();
 
         private List<ImItem> ims = new ArrayList<>();
 
@@ -430,11 +430,11 @@ public class ContactsProvider {
 
             putInfoArray(contact, "nicknames", nicknames);
 
-            putInfoArray(contact, "phoneNumbers", phones);
+            putInfoArray(contact, "phones", phones);
 
-            putInfoArray(contact, "emailAddresses", emails);
+            putInfoArray(contact, "emails", emails);
 
-            putInfoArray(contact, "postalAddresses", postalAddresses);
+            putInfoArray(contact, "postals", postals);
 
             putInfoArray(contact, "ims", ims);
 
@@ -532,15 +532,15 @@ public class ContactsProvider {
             private static String getLabel(Cursor cursor) {
                 switch (getInt(cursor, Nickname.TYPE)) {
                     case Nickname.TYPE_DEFAULT:
-                        return "default";
+                        return "Default";
                     case Nickname.TYPE_OTHER_NAME:
-                        return "other_name";
+                        return "Other Name";
                     case Nickname.TYPE_MAIDEN_NAME:
-                        return "maiden_name";
+                        return "Maiden Name";
                     case Nickname.TYPE_SHORT_NAME:
-                        return "short_name";
+                        return "Short Name";
                     case Nickname.TYPE_INITIALS:
-                        return "initials";
+                        return "Initials";
                     case Nickname.TYPE_CUSTOM:
                         return getString(cursor, Nickname.LABEL);
                     default:
@@ -574,45 +574,45 @@ public class ContactsProvider {
             private static String getLabel(Cursor cursor) {
                 switch (getInt(cursor, Phone.TYPE)) {
                     case Phone.TYPE_HOME:
-                        return "home";
+                        return "Home";
                     case Phone.TYPE_MOBILE:
-                        return "mobile";
+                        return "Mobile";
                     case Phone.TYPE_WORK:
-                        return "work";
+                        return "Work";
                     case Phone.TYPE_FAX_WORK:
-                        return "fax_work";
+                        return "Fax Work";
                     case Phone.TYPE_FAX_HOME:
-                        return "fax_home";
+                        return "Fax Home";
                     case Phone.TYPE_PAGER:
-                        return "pager";
+                        return "Pager";
                     case Phone.TYPE_OTHER:
-                        return "other";
+                        return "Other";
                     case Phone.TYPE_CALLBACK:
-                        return "callback";
+                        return "Callback";
                     case Phone.TYPE_CAR:
-                        return "car";
+                        return "Car";
                     case Phone.TYPE_COMPANY_MAIN:
-                        return "company_main";
+                        return "Company Main";
                     case Phone.TYPE_ISDN:
-                        return "isdn";
+                        return "ISDN";
                     case Phone.TYPE_MAIN:
-                        return "main";
+                        return "Main";
                     case Phone.TYPE_OTHER_FAX:
-                        return "other_fax";
+                        return "Other Fax";
                     case Phone.TYPE_RADIO:
-                        return "radio";
+                        return "Radio";
                     case Phone.TYPE_TELEX:
-                        return "telex";
+                        return "Telex";
                     case Phone.TYPE_TTY_TDD:
-                        return "tty_tdd";
+                        return "TTY TDD";
                     case Phone.TYPE_WORK_MOBILE:
-                        return "work_mobile";
+                        return "Work Mobile";
                     case Phone.TYPE_WORK_PAGER:
-                        return "work_pager";
+                        return "Work Pager";
                     case Phone.TYPE_ASSISTANT:
-                        return "assistant";
+                        return "Assistant";
                     case Phone.TYPE_MMS:
-                        return "mms";
+                        return "MMS";
                     case Phone.TYPE_CUSTOM:
                         return getString(cursor, Phone.LABEL);
                     default:
@@ -647,13 +647,13 @@ public class ContactsProvider {
             private static String getLabel(Cursor cursor) {
                 switch (getInt(cursor, Email.TYPE)) {
                     case Email.TYPE_HOME:
-                        return "home";
+                        return "Home";
                     case Email.TYPE_WORK:
-                        return "work";
+                        return "Work";
                     case Email.TYPE_OTHER:
-                        return "other";
+                        return "Other";
                     case Email.TYPE_MOBILE:
-                        return "mobile";
+                        return "Mobile";
                     case Email.TYPE_CUSTOM:
                         return getString(cursor, Email.LABEL);
                     default:
@@ -700,11 +700,11 @@ public class ContactsProvider {
             private static String getLabel(Cursor cursor) {
                 switch (getInt(cursor, StructuredPostal.TYPE)) {
                     case StructuredPostal.TYPE_HOME:
-                        return "home";
+                        return "Home";
                     case StructuredPostal.TYPE_WORK:
-                        return "work";
+                        return "Work";
                     case StructuredPostal.TYPE_OTHER:
-                        return "other";
+                        return "Other";
                     case StructuredPostal.TYPE_CUSTOM:
                         return getString(cursor, StructuredPostal.LABEL);
                     default:
@@ -745,11 +745,11 @@ public class ContactsProvider {
             private static String getLabel(Cursor cursor) {
                 switch (getInt(cursor, Im.TYPE)) {
                     case Im.TYPE_HOME:
-                        return "home";
+                        return "Home";
                     case Im.TYPE_WORK:
-                        return "work";
+                        return "Work";
                     case Im.TYPE_OTHER:
-                        return "other";
+                        return "Other";
                     case Im.TYPE_CUSTOM:
                         return getString(cursor, Im.LABEL);
                     default:
@@ -762,23 +762,23 @@ public class ContactsProvider {
                     case Im.PROTOCOL_CUSTOM:
                         return getString(cursor, Im.CUSTOM_PROTOCOL);
                     case Im.PROTOCOL_AIM:
-                        return "aim";
+                        return "AIM";
                     case Im.PROTOCOL_MSN:
-                        return "msn";
+                        return "MSN";
                     case Im.PROTOCOL_YAHOO:
-                        return "yahoo";
+                        return "Yahoo";
                     case Im.PROTOCOL_SKYPE:
-                        return "skype";
+                        return "Skype";
                     case Im.PROTOCOL_QQ:
-                        return "qq";
+                        return "QQ";
                     case Im.PROTOCOL_GOOGLE_TALK:
-                        return "google_talk";
+                        return "Google Talk";
                     case Im.PROTOCOL_ICQ:
-                        return "icq";
+                        return "ICQ";
                     case Im.PROTOCOL_JABBER:
-                        return "jabber";
+                        return "Jabber";
                     case Im.PROTOCOL_NETMEETING:
-                        return "netmeeting";
+                        return "NetMeeting";
                     default:
                         return null;
                 }
@@ -823,9 +823,9 @@ public class ContactsProvider {
             private static String getLabel(Cursor cursor) {
                 switch (getInt(cursor, Organization.TYPE)) {
                     case Organization.TYPE_WORK:
-                        return "work";
+                        return "Work";
                     case Organization.TYPE_OTHER:
-                        return "other";
+                        return "Other";
                     case Organization.TYPE_CUSTOM:
                         return getString(cursor, Organization.LABEL);
                     default:
@@ -879,33 +879,33 @@ public class ContactsProvider {
             private static String getLabel(Cursor cursor) {
                 switch (getInt(cursor, Relation.TYPE)) {
                     case Relation.TYPE_ASSISTANT:
-                        return "assistant";
+                        return "Assistant";
                     case Relation.TYPE_BROTHER:
-                        return "brother";
+                        return "Brother";
                     case Relation.TYPE_CHILD:
-                        return "child";
+                        return "Child";
                     case Relation.TYPE_DOMESTIC_PARTNER:
-                        return "domestic_partner";
+                        return "Domestic Partner";
                     case Relation.TYPE_FATHER:
-                        return "father";
+                        return "Father";
                     case Relation.TYPE_FRIEND:
-                        return "friend";
+                        return "Friend";
                     case Relation.TYPE_MANAGER:
-                        return "manager";
+                        return "Manager";
                     case Relation.TYPE_MOTHER:
-                        return "mother";
+                        return "Mother";
                     case Relation.TYPE_PARENT:
-                        return "parent";
+                        return "Parent";
                     case Relation.TYPE_PARTNER:
-                        return "partner";
+                        return "Partner";
                     case Relation.TYPE_REFERRED_BY:
-                        return "referred_by";
+                        return "Referred By";
                     case Relation.TYPE_RELATIVE:
-                        return "relative";
+                        return "Relative";
                     case Relation.TYPE_SISTER:
-                        return "sister";
+                        return "Sister";
                     case Relation.TYPE_SPOUSE:
-                        return "spouse";
+                        return "Spouse";
                     case Relation.TYPE_CUSTOM:
                         return getString(cursor, Relation.LABEL);
                     default:
@@ -937,11 +937,11 @@ public class ContactsProvider {
             private static String getLabel(Cursor cursor) {
                 switch (getInt(cursor, Event.TYPE)) {
                     case Event.TYPE_ANNIVERSARY:
-                        return "anniversary";
+                        return "Anniversary";
                     case Event.TYPE_OTHER:
-                        return "other";
+                        return "Other";
                     case Event.TYPE_BIRTHDAY:
-                        return "birthday";
+                        return "Birthday";
                     case Event.TYPE_CUSTOM:
                         return getString(cursor, Event.LABEL);
                     default:
@@ -991,19 +991,19 @@ public class ContactsProvider {
             private static String getLabel(Cursor cursor) {
                 switch (getInt(cursor, Website.TYPE)) {
                     case Website.TYPE_HOMEPAGE:
-                        return "homepage";
+                        return "Homepage";
                     case Website.TYPE_BLOG:
-                        return "blog";
+                        return "Blog";
                     case Website.TYPE_PROFILE:
-                        return "profile";
+                        return "Profile";
                     case Website.TYPE_HOME:
-                        return "home";
+                        return "Home";
                     case Website.TYPE_WORK:
-                        return "work";
+                        return "Work";
                     case Website.TYPE_FTP:
-                        return "ftp";
+                        return "FTP";
                     case Website.TYPE_OTHER:
-                        return "other";
+                        return "Other";
                     case Website.TYPE_CUSTOM:
                         return getString(cursor, Website.LABEL);
                     default:
@@ -1035,11 +1035,11 @@ public class ContactsProvider {
             private static String getLabel(Cursor cursor) {
                 switch (getInt(cursor, SipAddress.TYPE)) {
                     case SipAddress.TYPE_HOME:
-                        return "home";
+                        return "Home";
                     case SipAddress.TYPE_WORK:
-                        return "work";
+                        return "Work";
                     case SipAddress.TYPE_OTHER:
-                        return "other";
+                        return "Other";
                     case SipAddress.TYPE_CUSTOM:
                         return getString(cursor, SipAddress.LABEL);
                     default:
