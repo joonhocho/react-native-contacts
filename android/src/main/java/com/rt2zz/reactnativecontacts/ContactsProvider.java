@@ -6,6 +6,9 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.ContactsContract;
+import android.provider.ContactsContract.Contacts;
+import android.provider.ContactsContract.Data;
+import android.provider.ContactsContract.RawContacts;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -18,7 +21,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static android.provider.ContactsContract.CommonDataKinds.Contactables;
 import static android.provider.ContactsContract.CommonDataKinds.StructuredName;
 import static android.provider.ContactsContract.CommonDataKinds.Nickname;
 import static android.provider.ContactsContract.CommonDataKinds.Phone;
@@ -40,19 +42,39 @@ public class ContactsProvider {
     public static final int ID_FOR_PROFILE_CONTACT = -1;
 
     private static final List<String> JUST_ME_PROJECTION = new ArrayList<String>() {{
-        add(ContactsContract.Data.CONTACT_ID);
-        add(ContactsContract.Data.TIMES_CONTACTED);
-        add(ContactsContract.Data.LAST_TIME_CONTACTED);
-        add(ContactsContract.Data.STARRED);
-        // add(ContactsContract.Data.PINNED);
-        add(ContactsContract.Contacts.Data.MIMETYPE);
-        add(ContactsContract.Profile.DISPLAY_NAME);
-        add(Contactables.PHOTO_URI);
-        add(Contactables.PHOTO_THUMBNAIL_URI);
-        add(Contactables.LOOKUP_KEY);
+        // DataColumns
+        add(Data.MIMETYPE);
+        // add(Data.RAW_CONTACT_ID); Not Needed
+        add(Data.IS_PRIMARY);
+        // add(Data.IS_SUPER_PRIMARY); Not Needed
+
+        // RawContactsColumns
+        add(Data.CONTACT_ID);
+        // add(Data.DELETED); Invalid Column
+        add(Data.RAW_CONTACT_IS_USER_PROFILE);
+
+        // SyncColumns
+        add(RawContacts.ACCOUNT_NAME);
+        add(RawContacts.ACCOUNT_TYPE);
+        add(RawContacts.SOURCE_ID);
+        // add(RawContacts.VERSION);
+
+        // ContactsColumns
+        add(Contacts.DISPLAY_NAME);
+        add(Contacts.PHOTO_URI);
+        add(Contacts.PHOTO_THUMBNAIL_URI);
+        // add(Contacts.IS_USER_PROFILE); Invalid Column
+        add(Contacts.LOOKUP_KEY);
         if (Build.VERSION.SDK_INT >= 18) {
-            add(Contactables.CONTACT_LAST_UPDATED_TIMESTAMP);
+            add(Contacts.CONTACT_LAST_UPDATED_TIMESTAMP);
         }
+
+        // ContactOptionsColumns
+        add(Contacts.TIMES_CONTACTED);
+        add(Contacts.LAST_TIME_CONTACTED);
+        add(Contacts.STARRED);
+        // add(Contacts.PINNED);
+
         add(StructuredName.DISPLAY_NAME);
         add(StructuredName.GIVEN_NAME);
         add(StructuredName.FAMILY_NAME);
@@ -66,17 +88,21 @@ public class ContactsProvider {
         //     add(StructuredName.FULL_NAME_STYLE);
         // }
         // add(StructuredName.PHONETIC_NAME_STYLE);
+
         add(Nickname.TYPE);
         add(Nickname.LABEL);
         add(Nickname.NAME);
+
         add(Phone.TYPE);
         add(Phone.LABEL);
         add(Phone.NUMBER);
         add(Phone.NORMALIZED_NUMBER);
+
         add(Email.TYPE);
         add(Email.LABEL);
         add(Email.ADDRESS);
         add(Email.DISPLAY_NAME);
+
         add(StructuredPostal.TYPE);
         add(StructuredPostal.LABEL);
         add(StructuredPostal.FORMATTED_ADDRESS);
@@ -87,10 +113,12 @@ public class ContactsProvider {
         add(StructuredPostal.REGION);
         add(StructuredPostal.POSTCODE);
         add(StructuredPostal.COUNTRY);
+
         add(Im.TYPE);
         add(Im.LABEL);
         add(Im.PROTOCOL);
         add(Im.CUSTOM_PROTOCOL);
+
         add(Organization.TYPE);
         add(Organization.LABEL);
         add(Organization.COMPANY);
@@ -101,19 +129,25 @@ public class ContactsProvider {
         add(Organization.PHONETIC_NAME);
         add(Organization.OFFICE_LOCATION);
         // add(Organization.PHONETIC_NAME_STYLE);
+
         add(Relation.TYPE);
         add(Relation.LABEL);
         add(Relation.NAME);
+
         add(Event.TYPE);
         add(Event.LABEL);
         add(Event.START_DATE);
+
         add(Note.NOTE);
+
         add(Website.TYPE);
         add(Website.LABEL);
         add(Website.URL);
+
         add(SipAddress.TYPE);
         add(SipAddress.LABEL);
         add(SipAddress.SIP_ADDRESS);
+
         add(Identity.IDENTITY);
         add(Identity.NAMESPACE);
     }};
@@ -123,7 +157,7 @@ public class ContactsProvider {
     }};
 
     private static final List<String> PHOTO_PROJECTION = new ArrayList<String>() {{
-        add(Contactables.PHOTO_URI);
+        add(Contacts.PHOTO_URI);
     }};
 
     private final ContentResolver contentResolver;
@@ -138,7 +172,7 @@ public class ContactsProvider {
             Cursor cursor = contentResolver.query(
                     Uri.withAppendedPath(
                             ContactsContract.Profile.CONTENT_URI,
-                            ContactsContract.Contacts.Data.CONTENT_DIRECTORY
+                            Contacts.Data.CONTENT_DIRECTORY
                     ),
                     JUST_ME_PROJECTION.toArray(new String[JUST_ME_PROJECTION.size()]),
                     null,
@@ -158,21 +192,21 @@ public class ContactsProvider {
         Map<String, Contact> everyoneElse;
         {
             Cursor cursor = contentResolver.query(
-                    ContactsContract.Data.CONTENT_URI,
+                    Data.CONTENT_URI,
                     FULL_PROJECTION.toArray(new String[FULL_PROJECTION.size()]),
-                    ContactsContract.Data.MIMETYPE + "=? OR " +
-                            ContactsContract.Data.MIMETYPE + "=? OR " +
-                            ContactsContract.Data.MIMETYPE + "=? OR " +
-                            ContactsContract.Data.MIMETYPE + "=? OR " +
-                            ContactsContract.Data.MIMETYPE + "=? OR " +
-                            ContactsContract.Data.MIMETYPE + "=? OR " +
-                            ContactsContract.Data.MIMETYPE + "=? OR " +
-                            ContactsContract.Data.MIMETYPE + "=? OR " +
-                            ContactsContract.Data.MIMETYPE + "=? OR " +
-                            ContactsContract.Data.MIMETYPE + "=? OR " +
-                            ContactsContract.Data.MIMETYPE + "=? OR " +
-                            ContactsContract.Data.MIMETYPE + "=? OR " +
-                            ContactsContract.Data.MIMETYPE + "=?",
+                    Data.MIMETYPE + "=? OR " +
+                            Data.MIMETYPE + "=? OR " +
+                            Data.MIMETYPE + "=? OR " +
+                            Data.MIMETYPE + "=? OR " +
+                            Data.MIMETYPE + "=? OR " +
+                            Data.MIMETYPE + "=? OR " +
+                            Data.MIMETYPE + "=? OR " +
+                            Data.MIMETYPE + "=? OR " +
+                            Data.MIMETYPE + "=? OR " +
+                            Data.MIMETYPE + "=? OR " +
+                            Data.MIMETYPE + "=? OR " +
+                            Data.MIMETYPE + "=? OR " +
+                            Data.MIMETYPE + "=?",
                     new String[] {
                             StructuredName.CONTENT_ITEM_TYPE,
                             Nickname.CONTENT_ITEM_TYPE,
@@ -212,7 +246,10 @@ public class ContactsProvider {
     }
 
     private static String getString(Cursor cursor, String columnName) {
-       return cursor.getString(cursor.getColumnIndex(columnName));
+        String str = cursor.getString(cursor.getColumnIndex(columnName));
+        if (str == null) return null;
+        str = str.trim();
+        return str.isEmpty() ? null : str;
     }
 
     private static int getInt(Cursor cursor, String columnName) {
@@ -220,7 +257,7 @@ public class ContactsProvider {
     }
 
     private static boolean isEmptyString(String str) {
-        return str == null || str.isEmpty();
+        return str == null || str.trim().isEmpty();
     }
 
     @NonNull
@@ -228,35 +265,41 @@ public class ContactsProvider {
         Map<String, Contact> map = new LinkedHashMap<>();
 
         while (cursor != null && cursor.moveToNext()) {
-            int columnIndex = cursor.getColumnIndex(ContactsContract.Data.CONTACT_ID);
-            String id;
+            int columnIndex = cursor.getColumnIndex(Data.CONTACT_ID);
+            String contactId;
             if (columnIndex != -1) {
-                id = cursor.getString(columnIndex);
+                contactId = cursor.getString(columnIndex);
             } else {
                 //todo - double check this, it may not be necessary any more
-                id = String.valueOf(ID_FOR_PROFILE_CONTACT);//no contact id for 'ME' user
+                contactId = String.valueOf(ID_FOR_PROFILE_CONTACT); //no contact id for 'ME' user
             }
 
             Contact contact;
-            if (map.containsKey(id)) {
-                contact = map.get(id);
+            if (map.containsKey(contactId)) {
+                contact = map.get(contactId);
             } else {
-                contact = new Contact(id);
-                map.put(id, contact);
+                contact = new Contact(contactId);
+                map.put(contactId, contact);
 
-                contact.timesContacted = getInt(cursor, ContactsContract.Data.TIMES_CONTACTED);
-                contact.lastTimeContacted = getString(cursor, ContactsContract.Data.LAST_TIME_CONTACTED);
-                contact.starred = getInt(cursor, ContactsContract.Data.STARRED) == 1;
+                contact.isUserProfile = getInt(cursor, Data.RAW_CONTACT_IS_USER_PROFILE) == 1;
+                contact.accountName = getString(cursor, RawContacts.ACCOUNT_NAME);
+                contact.accountType = getString(cursor, RawContacts.ACCOUNT_TYPE);
+                contact.sourceId = getString(cursor, RawContacts.SOURCE_ID);
 
-                contact.photoUri = getString(cursor, Contactables.PHOTO_URI);
-                contact.photoThumbnailUri = getString(cursor, Contactables.PHOTO_THUMBNAIL_URI);
-                contact.lookupKey = getString(cursor, Contactables.LOOKUP_KEY);
+                contact.displayName = getString(cursor, Contacts.DISPLAY_NAME);
+                contact.photoUri = getString(cursor, Contacts.PHOTO_URI);
+                contact.photoThumbnailUri = getString(cursor, Contacts.PHOTO_THUMBNAIL_URI);
+                contact.lookupKey = getString(cursor, Contacts.LOOKUP_KEY);
                 if (Build.VERSION.SDK_INT >= 18) {
-                    contact.contactLastUpdatedTimestamp = getString(cursor, Contactables.CONTACT_LAST_UPDATED_TIMESTAMP);
+                    contact.lastUpdated = getString(cursor, Contacts.CONTACT_LAST_UPDATED_TIMESTAMP);
                 }
+
+                contact.timesContacted = getInt(cursor, Data.TIMES_CONTACTED);
+                contact.lastContacted = getString(cursor, Data.LAST_TIME_CONTACTED);
+                contact.starred = getInt(cursor, Data.STARRED) == 1;
             }
 
-            switch (getString(cursor, ContactsContract.Data.MIMETYPE)) {
+            switch (getString(cursor, Data.MIMETYPE)) {
                 case StructuredName.CONTENT_ITEM_TYPE:
                     Contact.StructuredNameItem nameItem = new Contact.StructuredNameItem(cursor);
                     if (nameItem.isValid()) {
@@ -345,15 +388,15 @@ public class ContactsProvider {
 
     public String getPhotoUriFromContactId(String contactId) {
         Cursor cursor = contentResolver.query(
-                ContactsContract.Data.CONTENT_URI,
+                Data.CONTENT_URI,
                 PHOTO_PROJECTION.toArray(new String[PHOTO_PROJECTION.size()]),
-                ContactsContract.RawContacts.CONTACT_ID + " = ?",
+                RawContacts.CONTACT_ID + " = ?",
                 new String[]{contactId},
                 null
         );
         try {
             if (cursor != null && cursor.moveToNext()) {
-                String rawPhotoURI = getString(cursor, Contactables.PHOTO_URI);
+                String rawPhotoURI = getString(cursor, Contacts.PHOTO_URI);
                 if (!isEmptyString(rawPhotoURI)) {
                     return rawPhotoURI;
                 }
@@ -367,16 +410,22 @@ public class ContactsProvider {
     }
 
     private static class Contact {
-        private String id;
+        private String contactId;
 
-        private int timesContacted = 0;
-        private String lastTimeContacted;
-        private boolean starred = false;
+        private boolean isUserProfile = false;
+        private String accountName;
+        private String accountType;
+        private String sourceId;
 
+        private String displayName;
         private String photoUri;
         private String photoThumbnailUri;
         private String lookupKey;
-        private String contactLastUpdatedTimestamp;
+        private String lastUpdated;
+
+        private int timesContacted = 0;
+        private String lastContacted;
+        private boolean starred = false;
 
         private List<StructuredNameItem> names = new ArrayList<>();
 
@@ -404,8 +453,8 @@ public class ContactsProvider {
 
         private List<IdentityItem> identities = new ArrayList<>();
 
-        public Contact(String id) {
-            this.id = id;
+        public Contact(String contactId) {
+            this.contactId = contactId;
         }
 
         private static void putString(WritableMap map, String key, String value) {
@@ -414,10 +463,10 @@ public class ContactsProvider {
             }
         }
 
-        private static void putInfoArray(WritableMap map, String key, List<? extends InfoItem> list) {
+        private static void putInfoArray(WritableMap map, String key, List<? extends BaseInfoItem> list) {
             if (!list.isEmpty()) {
                 WritableArray array = Arguments.createArray();
-                for (InfoItem item : list) {
+                for (BaseInfoItem item : list) {
                     array.pushMap(item.toMap());
                 }
                 map.putArray(key, array);
@@ -426,16 +475,22 @@ public class ContactsProvider {
 
         public WritableMap toMap() {
             WritableMap contact = Arguments.createMap();
-            contact.putString("id", id);
+            putString(contact, "contactId", contactId);
 
-            contact.putInt("timesContacted", timesContacted);
-            putString(contact, "lastTimeContacted", lastTimeContacted);
-            contact.putBoolean("starred", starred);
+            contact.putBoolean("isUserProfile", isUserProfile);
+            putString(contact, "accountName", accountName);
+            putString(contact, "accountType", accountType);
+            putString(contact, "sourceId", sourceId);
 
+            putString(contact, "displayName", displayName);
             putString(contact, "photoUri", photoUri);
             putString(contact, "photoThumbnailUri", photoThumbnailUri);
             putString(contact, "lookupKey", lookupKey);
-            putString(contact, "contactLastUpdatedTimestamp", contactLastUpdatedTimestamp);
+            putString(contact, "lastUpdated", lastUpdated);
+
+            contact.putInt("timesContacted", timesContacted);
+            putString(contact, "lastContacted", lastContacted);
+            contact.putBoolean("starred", starred);
 
             putInfoArray(contact, "names", names);
 
@@ -466,12 +521,23 @@ public class ContactsProvider {
             return contact;
         }
 
-        public interface InfoItem {
-            boolean isValid();
-            WritableMap toMap();
+        abstract public static class BaseInfoItem {
+            private boolean isPrimary = false;
+
+            BaseInfoItem(Cursor cursor) {
+                isPrimary = getInt(cursor, Data.IS_PRIMARY) == 1;
+            }
+
+            abstract boolean isValid();
+
+            WritableMap toMap() {
+                WritableMap map = Arguments.createMap();
+                map.putBoolean("isPrimary", isPrimary);
+                return map;
+            }
         }
 
-        public static class StructuredNameItem implements InfoItem {
+        public static class StructuredNameItem extends BaseInfoItem {
             private String displayName;
             private String givenName;
             private String familyName;
@@ -485,6 +551,7 @@ public class ContactsProvider {
             private String phoneticNameStyle;
 
             public StructuredNameItem(Cursor cursor) {
+                super(cursor);
                 displayName = getString(cursor, StructuredName.DISPLAY_NAME);
                 givenName = getString(cursor, StructuredName.GIVEN_NAME);
                 familyName = getString(cursor, StructuredName.FAMILY_NAME);
@@ -544,7 +611,7 @@ public class ContactsProvider {
             }
 
             public WritableMap toMap() {
-                WritableMap map = Arguments.createMap();
+                WritableMap map = super.toMap();
                 putString(map, "displayName", displayName);
                 putString(map, "givenName", givenName);
                 putString(map, "familyName", familyName);
@@ -560,11 +627,12 @@ public class ContactsProvider {
             }
         }
 
-        public static class NicknameItem implements InfoItem {
+        public static class NicknameItem extends BaseInfoItem {
             private String label;
             private String name;
 
             public NicknameItem(Cursor cursor) {
+                super(cursor);
                 label = getLabel(cursor);
                 name = getString(cursor, Nickname.NAME);
             }
@@ -593,19 +661,20 @@ public class ContactsProvider {
             }
 
             public WritableMap toMap() {
-                WritableMap map = Arguments.createMap();
+                WritableMap map = super.toMap();
                 putString(map, "label", label);
                 putString(map, "name", name);
                 return map;
             }
         }
 
-        public static class PhoneItem implements InfoItem {
+        public static class PhoneItem extends BaseInfoItem {
             private String label;
             private String number;
             private String normalizedNumber;
 
             public PhoneItem(Cursor cursor) {
+                super(cursor);
                 label = getLabel(cursor);
                 number = getString(cursor, Phone.NUMBER);
                 normalizedNumber = getString(cursor, Phone.NORMALIZED_NUMBER);
@@ -665,7 +734,7 @@ public class ContactsProvider {
             }
 
             public WritableMap toMap() {
-                WritableMap map = Arguments.createMap();
+                WritableMap map = super.toMap();
                 putString(map, "label", label);
                 putString(map, "number", number);
                 putString(map, "normalizedNumber", normalizedNumber);
@@ -673,12 +742,13 @@ public class ContactsProvider {
             }
         }
 
-        public static class EmailItem implements InfoItem {
+        public static class EmailItem extends BaseInfoItem {
             private String label;
             private String address;
             private String displayName;
 
             public EmailItem(Cursor cursor) {
+                super(cursor);
                 label = getLabel(cursor);
                 address = getString(cursor, Email.ADDRESS);
                 displayName = getString(cursor, Email.DISPLAY_NAME);
@@ -706,7 +776,7 @@ public class ContactsProvider {
             }
 
             public WritableMap toMap() {
-                WritableMap map = Arguments.createMap();
+                WritableMap map = super.toMap();
                 putString(map, "label", label);
                 putString(map, "address", address);
                 putString(map, "displayName", displayName);
@@ -714,7 +784,7 @@ public class ContactsProvider {
             }
         }
 
-        public static class StructuredPostalItem implements InfoItem {
+        public static class StructuredPostalItem extends BaseInfoItem {
             private String label;
             private String formattedAddress;
             private String street;
@@ -726,6 +796,7 @@ public class ContactsProvider {
             private String country;
 
             public StructuredPostalItem(Cursor cursor) {
+                super(cursor);
                 label = getLabel(cursor);
                 formattedAddress = getString(cursor, StructuredPostal.FORMATTED_ADDRESS);
                 street = getString(cursor, StructuredPostal.STREET);
@@ -757,7 +828,7 @@ public class ContactsProvider {
             }
 
             public WritableMap toMap() {
-                WritableMap map = Arguments.createMap();
+                WritableMap map = super.toMap();
                 putString(map, "label", label);
                 putString(map, "formattedAddress", formattedAddress);
                 putString(map, "street", street);
@@ -771,12 +842,13 @@ public class ContactsProvider {
             }
         }
 
-        public static class ImItem implements InfoItem {
+        public static class ImItem extends BaseInfoItem {
             private String label;
             private String protocol;
             private String username;
 
             public ImItem(Cursor cursor) {
+                super(cursor);
                 label = getLabel(cursor);
                 protocol = getProtocol(cursor);
                 username = getString(cursor, Im.DATA);
@@ -829,7 +901,7 @@ public class ContactsProvider {
             }
 
             public WritableMap toMap() {
-                WritableMap map = Arguments.createMap();
+                WritableMap map = super.toMap();
                 putString(map, "label", label);
                 putString(map, "protocol", protocol);
                 putString(map, "username", username);
@@ -837,7 +909,7 @@ public class ContactsProvider {
             }
         }
 
-        public static class OrganizationItem implements InfoItem {
+        public static class OrganizationItem extends BaseInfoItem {
             private String label;
             private String company;
             private String title;
@@ -849,6 +921,7 @@ public class ContactsProvider {
             private String phoneticNameStyle;
 
             public OrganizationItem(Cursor cursor) {
+                super(cursor);
                 label = getLabel(cursor);
                 company = getString(cursor, Organization.COMPANY);
                 title = getString(cursor, Organization.TITLE);
@@ -893,7 +966,7 @@ public class ContactsProvider {
             }
 
             public WritableMap toMap() {
-                WritableMap map = Arguments.createMap();
+                WritableMap map = super.toMap();
                 putString(map, "label", label);
                 putString(map, "company", company);
                 putString(map, "title", title);
@@ -907,11 +980,12 @@ public class ContactsProvider {
             }
         }
 
-        public static class RelationItem implements InfoItem {
+        public static class RelationItem extends BaseInfoItem {
             private String label;
             private String name;
 
             public RelationItem(Cursor cursor) {
+                super(cursor);
                 label = getLabel(cursor);
                 name = getString(cursor, Relation.NAME);
             }
@@ -958,18 +1032,19 @@ public class ContactsProvider {
             }
 
             public WritableMap toMap() {
-                WritableMap map = Arguments.createMap();
+                WritableMap map = super.toMap();
                 putString(map, "label", label);
                 putString(map, "name", name);
                 return map;
             }
         }
 
-        public static class EventItem implements InfoItem {
+        public static class EventItem extends BaseInfoItem {
             private String label;
             private String startDate;
 
             public EventItem(Cursor cursor) {
+                super(cursor);
                 label = getLabel(cursor);
                 startDate = getString(cursor, Event.START_DATE);
             }
@@ -994,17 +1069,18 @@ public class ContactsProvider {
             }
 
             public WritableMap toMap() {
-                WritableMap map = Arguments.createMap();
+                WritableMap map = super.toMap();
                 putString(map, "label", label);
                 putString(map, "startDate", startDate);
                 return map;
             }
         }
 
-        public static class NoteItem implements InfoItem {
+        public static class NoteItem extends BaseInfoItem {
             private String note;
 
             public NoteItem(Cursor cursor) {
+                super(cursor);
                 note = getString(cursor, Note.NOTE);
             }
 
@@ -1013,17 +1089,18 @@ public class ContactsProvider {
             }
 
             public WritableMap toMap() {
-                WritableMap map = Arguments.createMap();
+                WritableMap map = super.toMap();
                 putString(map, "note", note);
                 return map;
             }
         }
 
-        public static class WebsiteItem implements InfoItem {
+        public static class WebsiteItem extends BaseInfoItem {
             private String label;
             private String url;
 
             public WebsiteItem(Cursor cursor) {
+                super(cursor);
                 label = getLabel(cursor);
                 url = getString(cursor, Website.URL);
             }
@@ -1056,18 +1133,19 @@ public class ContactsProvider {
             }
 
             public WritableMap toMap() {
-                WritableMap map = Arguments.createMap();
+                WritableMap map = super.toMap();
                 putString(map, "label", label);
                 putString(map, "url", url);
                 return map;
             }
         }
 
-        public static class SipAddressItem implements InfoItem {
+        public static class SipAddressItem extends BaseInfoItem {
             private String label;
             private String sipAddress;
 
             public SipAddressItem(Cursor cursor) {
+                super(cursor);
                 label = getLabel(cursor);
                 sipAddress = getString(cursor, SipAddress.SIP_ADDRESS);
             }
@@ -1092,18 +1170,19 @@ public class ContactsProvider {
             }
 
             public WritableMap toMap() {
-                WritableMap map = Arguments.createMap();
+                WritableMap map = super.toMap();
                 putString(map, "label", label);
                 putString(map, "sipAddress", sipAddress);
                 return map;
             }
         }
 
-        public static class IdentityItem implements InfoItem {
+        public static class IdentityItem extends BaseInfoItem {
             private String identity;
             private String namespace;
 
             public IdentityItem(Cursor cursor) {
+                super(cursor);
                 identity = getString(cursor, Identity.IDENTITY);
                 namespace = getString(cursor, Identity.NAMESPACE);
             }
@@ -1113,7 +1192,7 @@ public class ContactsProvider {
             }
 
             public WritableMap toMap() {
-                WritableMap map = Arguments.createMap();
+                WritableMap map = super.toMap();
                 putString(map, "identity", identity);
                 putString(map, "namespace", namespace);
                 return map;
