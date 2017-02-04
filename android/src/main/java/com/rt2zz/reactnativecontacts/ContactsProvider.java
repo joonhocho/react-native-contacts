@@ -301,82 +301,43 @@ public class ContactsProvider {
 
             switch (getString(cursor, Data.MIMETYPE)) {
                 case StructuredName.CONTENT_ITEM_TYPE:
-                    Contact.StructuredNameItem nameItem = new Contact.StructuredNameItem(cursor);
-                    if (nameItem.isValid()) {
-                        contact.names.add(nameItem);
-                    }
+                    Contact.addIfValid(contact.names, new Contact.StructuredNameItem(cursor));
                     break;
                 case Nickname.CONTENT_ITEM_TYPE:
-                    Contact.NicknameItem nicknameItem = new Contact.NicknameItem(cursor);
-                    if (nicknameItem.isValid()) {
-                        contact.nicknames.add(nicknameItem);
-                    }
+                    Contact.addIfValid(contact.nicknames, new Contact.NicknameItem(cursor));
                     break;
                 case Phone.CONTENT_ITEM_TYPE:
-                    Contact.PhoneItem phoneItem = new Contact.PhoneItem(cursor);
-                    if (phoneItem.isValid()) {
-                        contact.phones.add(phoneItem);
-                    }
+                    Contact.addIfValid(contact.phones, new Contact.PhoneItem(cursor));
                     break;
                 case Email.CONTENT_ITEM_TYPE:
-                    Contact.EmailItem emailItem = new Contact.EmailItem(cursor);
-                    if (emailItem.isValid()) {
-                        contact.emails.add(emailItem);
-                    }
+                    Contact.addIfValid(contact.emails, new Contact.EmailItem(cursor));
                     break;
                 case StructuredPostal.CONTENT_ITEM_TYPE:
-                    Contact.StructuredPostalItem postalItem = new Contact.StructuredPostalItem(cursor);
-                    if (postalItem.isValid()) {
-                        contact.postals.add(postalItem);
-                    }
+                    Contact.addIfValid(contact.postals, new Contact.StructuredPostalItem(cursor));
                     break;
                 case Im.CONTENT_ITEM_TYPE:
-                    Contact.ImItem imItem = new Contact.ImItem(cursor);
-                    if (imItem.isValid()) {
-                        contact.ims.add(imItem);
-                    }
+                    Contact.addIfValid(contact.ims, new Contact.ImItem(cursor));
                     break;
                 case Organization.CONTENT_ITEM_TYPE:
-                    Contact.OrganizationItem orgItem = new Contact.OrganizationItem(cursor);
-                    if (orgItem.isValid()) {
-                        contact.organizations.add(orgItem);
-                    }
+                    Contact.addIfValid(contact.organizations, new Contact.OrganizationItem(cursor));
                     break;
                 case Relation.CONTENT_ITEM_TYPE:
-                    Contact.RelationItem relationItem = new Contact.RelationItem(cursor);
-                    if (relationItem.isValid()) {
-                        contact.relations.add(relationItem);
-                    }
+                    Contact.addIfValid(contact.relations, new Contact.RelationItem(cursor));
                     break;
                 case Event.CONTENT_ITEM_TYPE:
-                    Contact.EventItem eventItem = new Contact.EventItem(cursor);
-                    if (eventItem.isValid()) {
-                        contact.events.add(eventItem);
-                    }
+                    Contact.addIfValid(contact.events, new Contact.EventItem(cursor));
                     break;
                 case Note.CONTENT_ITEM_TYPE:
-                    Contact.NoteItem noteItem = new Contact.NoteItem(cursor);
-                    if (noteItem.isValid()) {
-                        contact.notes.add(noteItem);
-                    }
+                    Contact.addIfValid(contact.notes, new Contact.NoteItem(cursor));
                     break;
                 case Website.CONTENT_ITEM_TYPE:
-                    Contact.WebsiteItem websiteItem = new Contact.WebsiteItem(cursor);
-                    if (websiteItem.isValid()) {
-                        contact.websites.add(websiteItem);
-                    }
+                    Contact.addIfValid(contact.websites, new Contact.WebsiteItem(cursor));
                     break;
                 case SipAddress.CONTENT_ITEM_TYPE:
-                    Contact.SipAddressItem sipAddressItem = new Contact.SipAddressItem(cursor);
-                    if (sipAddressItem.isValid()) {
-                        contact.sipAddresses.add(sipAddressItem);
-                    }
+                    Contact.addIfValid(contact.sipAddresses, new Contact.SipAddressItem(cursor));
                     break;
                 case Identity.CONTENT_ITEM_TYPE:
-                    Contact.IdentityItem identityItem = new Contact.IdentityItem(cursor);
-                    if (identityItem.isValid()) {
-                        contact.identities.add(identityItem);
-                    }
+                    Contact.addIfValid(contact.identities, new Contact.IdentityItem(cursor));
                     break;
                 default:
                     break;
@@ -463,6 +424,16 @@ public class ContactsProvider {
             }
         }
 
+        private static <T extends BaseInfoItem> void addIfValid(List<T> list, T item) {
+            if (item.isValid()) {
+                if (item.isPrimary) {
+                    list.add(0, item);
+                } else {
+                    list.add(item);
+                }
+            }
+        }
+
         private static void putInfoArray(WritableMap map, String key, List<? extends BaseInfoItem> list) {
             if (!list.isEmpty()) {
                 WritableArray array = Arguments.createArray();
@@ -522,7 +493,7 @@ public class ContactsProvider {
         }
 
         abstract public static class BaseInfoItem {
-            private boolean isPrimary = false;
+            boolean isPrimary = false;
 
             BaseInfoItem(Cursor cursor) {
                 isPrimary = getInt(cursor, Data.IS_PRIMARY) == 1;
